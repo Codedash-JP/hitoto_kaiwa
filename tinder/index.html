@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tinder風スワイプ</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+        background: radial-gradient(circle at top, #ffe7ee, #ffdce6 35%, #f8f3f5 100%);
+        color: #1f2937;
+      }
+
+      .app {
+        width: min(720px, 100%);
+        margin: 0 auto;
+        min-height: 100vh;
+        padding: 16px;
+        display: grid;
+        gap: 14px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.5rem, 4.5vw, 2rem);
+      }
+
+      .controls {
+        background: #ffffffdd;
+        border: 1px solid #ffd4df;
+        border-radius: 16px;
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .control-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      input[type="file"] {
+        width: 100%;
+        font-size: 0.95rem;
+      }
+
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .start {
+        background: #f43f5e;
+        color: white;
+      }
+
+      .stop {
+        background: #111827;
+        color: white;
+      }
+
+      .clear {
+        background: #e5e7eb;
+        color: #111827;
+      }
+
+      .status {
+        font-size: 0.9rem;
+        color: #4b5563;
+      }
+
+      .stage-wrap {
+        display: grid;
+        place-items: center;
+        background: #ffffffb5;
+        border: 1px solid #ffd4df;
+        border-radius: 18px;
+        padding: 12px;
+      }
+
+      canvas {
+        width: min(100%, 420px);
+        aspect-ratio: 3 / 4;
+        border-radius: 18px;
+        touch-action: none;
+        background: #f3f4f6;
+      }
+
+      .tips {
+        margin: 0;
+        font-size: 0.92rem;
+        color: #374151;
+      }
+
+      .download-link {
+        display: inline-block;
+        font-size: 0.92rem;
+        color: #be123c;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <h1>Tinder風スワイプ</h1>
+
+      <section class="controls">
+        <input id="fileInput" type="file" accept="image/*" multiple />
+        <div class="control-row">
+          <button id="startRec" class="start" type="button">録画開始</button>
+          <button id="stopRec" class="stop" type="button" disabled>録画終了</button>
+          <button id="clearAll" class="clear" type="button">画像をリセット</button>
+        </div>
+        <div id="status" class="status">画像を複数選択するとスワイプできます。</div>
+        <a id="download" class="download-link" hidden></a>
+      </section>
+
+      <section class="stage-wrap">
+        <canvas id="stage" width="420" height="560" aria-label="swipe stage"></canvas>
+      </section>
+
+      <p class="tips">操作: カードを左右へドラッグして離すとスワイプ。PCはマウス、スマホは指で操作できます。</p>
+    </main>
+
+    <script>
+      const stage = document.getElementById("stage");
+      const ctx = stage.getContext("2d");
+      const fileInput = document.getElementById("fileInput");
+      const startRecBtn = document.getElementById("startRec");
+      const stopRecBtn = document.getElementById("stopRec");
+      const clearBtn = document.getElementById("clearAll");
+      const statusEl = document.getElementById("status");
+      const downloadEl = document.getElementById("download");
+
+      const state = {
+        cards: [],
+        activeIndex: 0,
+        dragX: 0,
+        dragY: 0,
+        dragging: false,
+        pointerId: null,
+        startX: 0,
+        startY: 0,
+        animating: false,
+      };
+
+      let recorder = null;
+      let chunks = [];
+      let animationHandle = 0;
+
+      function setStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function roundRectPath(x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + w, y, x + w, y + h, radius);
+        ctx.arcTo(x + w, y + h, x, y + h, radius);
+        ctx.arcTo(x, y + h, x, y, radius);
+        ctx.arcTo(x, y, x + w, y, radius);
+        ctx.closePath();
+      }
+
+      function drawCard(image, x, y, w, h, opacity = 1) {
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        roundRectPath(x, y, w, h, 22);
+        ctx.clip();
+
+        const scale = Math.max(w / image.width, h / image.height);
+        const dw = image.width * scale;
+        const dh = image.height * scale;
+        const dx = x + (w - dw) / 2;
+        const dy = y + (h - dh) / 2;
+        ctx.drawImage(image, dx, dy, dw, dh);
+
+        const grad = ctx.createLinearGradient(0, y + h * 0.55, 0, y + h);
+        grad.addColorStop(0, "rgba(0,0,0,0)");
+        grad.addColorStop(1, "rgba(0,0,0,0.65)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, y, w, h);
+        ctx.restore();
+      }
+
+      function drawEmpty() {
+        ctx.clearRect(0, 0, stage.width, stage.height);
+        ctx.fillStyle = "#f9fafb";
+        ctx.fillRect(0, 0, stage.width, stage.height);
+        ctx.fillStyle = "#6b7280";
+        ctx.textAlign = "center";
+        ctx.font = "bold 22px sans-serif";
+        ctx.fillText("画像を選んで開始", stage.width / 2, stage.height / 2 - 8);
+        ctx.font = "16px sans-serif";
+        ctx.fillText("複数枚でTinder風スワイプ", stage.width / 2, stage.height / 2 + 22);
+      }
+
+      function drawLikeNope() {
+        if (!state.dragging && Math.abs(state.dragX) < 8) return;
+
+        const label = state.dragX >= 0 ? "LIKE" : "NOPE";
+        const color = state.dragX >= 0 ? "#16a34a" : "#dc2626";
+        const alpha = Math.min(Math.abs(state.dragX) / 120, 1);
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(stage.width / 2 + state.dragX * 0.15, 80);
+        ctx.rotate((state.dragX / stage.width) * 0.35);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 5;
+        ctx.strokeRect(-64, -26, 128, 52);
+        ctx.fillStyle = color;
+        ctx.font = "bold 30px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(label, 0, 11);
+        ctx.restore();
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, stage.width, stage.height);
+
+        if (state.cards.length === 0 || state.activeIndex >= state.cards.length) {
+          drawEmpty();
+          return;
+        }
+
+        const cardW = stage.width * 0.86;
+        const cardH = stage.height * 0.86;
+        const baseX = (stage.width - cardW) / 2;
+        const baseY = (stage.height - cardH) / 2;
+
+        const next = state.cards[state.activeIndex + 1]?.image;
+        if (next) {
+          drawCard(next, baseX + 10, baseY + 12, cardW - 20, cardH - 20, 0.85);
+        }
+
+        const current = state.cards[state.activeIndex]?.image;
+        if (!current) {
+          drawEmpty();
+          return;
+        }
+        ctx.save();
+        ctx.translate(stage.width / 2 + state.dragX, stage.height / 2 + state.dragY);
+        ctx.rotate((state.dragX / stage.width) * 0.25);
+        drawCard(current, -cardW / 2, -cardH / 2, cardW, cardH, 1);
+        ctx.restore();
+
+        drawLikeNope();
+      }
+
+      function queueRender() {
+        cancelAnimationFrame(animationHandle);
+        animationHandle = requestAnimationFrame(render);
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      async function filesToImages(files) {
+        const loaded = [];
+        for (const file of files) {
+          if (!file.type.startsWith("image/")) continue;
+          const url = URL.createObjectURL(file);
+          const img = new Image();
+          img.src = url;
+          await img.decode();
+          loaded.push({ image: img, cleanup: () => URL.revokeObjectURL(url) });
+        }
+        return loaded;
+      }
+
+      async function onFilesSelected(event) {
+        const files = Array.from(event.target.files || []);
+        if (files.length === 0) return;
+
+        state.cards.forEach((card) => card.cleanup());
+        state.cards = [];
+        state.activeIndex = 0;
+        state.dragX = 0;
+        state.dragY = 0;
+
+        try {
+          const loaded = await filesToImages(files);
+          state.cards = loaded;
+          setStatus(`${loaded.length}枚の画像を読み込みました。左右へスワイプできます。`);
+        } catch (error) {
+          setStatus("画像の読み込みに失敗しました。別の画像でお試しください。");
+        }
+
+        downloadEl.hidden = true;
+        downloadEl.removeAttribute("href");
+        queueRender();
+      }
+
+      function animateBack() {
+        if (state.animating) return;
+        state.animating = true;
+
+        function step() {
+          state.dragX *= 0.72;
+          state.dragY *= 0.72;
+          if (Math.abs(state.dragX) < 1 && Math.abs(state.dragY) < 1) {
+            state.dragX = 0;
+            state.dragY = 0;
+            state.animating = false;
+            queueRender();
+            return;
+          }
+          queueRender();
+          requestAnimationFrame(step);
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      function animateOut(direction) {
+        if (state.animating) return;
+        state.animating = true;
+        const targetX = direction > 0 ? stage.width * 1.25 : -stage.width * 1.25;
+
+        function step() {
+          state.dragX += (targetX - state.dragX) * 0.22;
+          state.dragY *= 0.95;
+          queueRender();
+
+          if (Math.abs(targetX - state.dragX) < 4) {
+            state.activeIndex += 1;
+            state.dragX = 0;
+            state.dragY = 0;
+            state.animating = false;
+            if (state.activeIndex >= state.cards.length) {
+              setStatus("全てのカードをスワイプしました。新しい画像を選択してください。");
+            }
+            queueRender();
+            return;
+          }
+          requestAnimationFrame(step);
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      function onPointerDown(event) {
+        if (state.cards.length === 0 || state.activeIndex >= state.cards.length || state.animating) return;
+        state.dragging = true;
+        state.pointerId = event.pointerId;
+        stage.setPointerCapture(event.pointerId);
+        state.startX = event.clientX;
+        state.startY = event.clientY;
+      }
+
+      function onPointerMove(event) {
+        if (!state.dragging || event.pointerId !== state.pointerId) return;
+        state.dragX = clamp(event.clientX - state.startX, -stage.width, stage.width);
+        state.dragY = clamp(event.clientY - state.startY, -120, 120);
+        queueRender();
+      }
+
+      function onPointerUp(event) {
+        if (!state.dragging || event.pointerId !== state.pointerId) return;
+        state.dragging = false;
+        stage.releasePointerCapture(event.pointerId);
+
+        if (Math.abs(state.dragX) > stage.width * 0.23) {
+          animateOut(state.dragX >= 0 ? 1 : -1);
+        } else {
+          animateBack();
+        }
+      }
+
+      function clearImages() {
+        state.cards.forEach((card) => card.cleanup());
+        state.cards = [];
+        state.activeIndex = 0;
+        state.dragX = 0;
+        state.dragY = 0;
+        fileInput.value = "";
+        setStatus("画像を複数選択するとスワイプできます。");
+        downloadEl.hidden = true;
+        downloadEl.removeAttribute("href");
+        queueRender();
+      }
+
+      function pickRecorderMimeType() {
+        const candidates = [
+          "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+          "video/mp4",
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+        ];
+
+        for (const type of candidates) {
+          if (MediaRecorder.isTypeSupported(type)) return type;
+        }
+        return "";
+      }
+
+      function startRecording() {
+        if (!window.MediaRecorder) {
+          setStatus("このブラウザは録画に対応していません。");
+          return;
+        }
+
+        const mimeType = pickRecorderMimeType();
+        if (!mimeType) {
+          setStatus("利用可能な録画コーデックが見つかりませんでした。");
+          return;
+        }
+
+        const stream = stage.captureStream(60);
+        recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+        chunks = [];
+
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            chunks.push(event.data);
+          }
+        };
+
+        recorder.onstop = () => {
+          const isMp4 = mimeType.includes("mp4");
+          const extension = isMp4 ? "mp4" : "webm";
+          const blob = new Blob(chunks, { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          downloadEl.href = url;
+          downloadEl.download = `tinder-swipe-recording.${extension}`;
+          downloadEl.textContent = `録画をダウンロード (${extension.toUpperCase()})`;
+          downloadEl.hidden = false;
+
+          if (!isMp4) {
+            setStatus("MP4未対応ブラウザのためWebMで保存しました。MP4対応ブラウザではMP4保存できます。");
+          } else {
+            setStatus("録画を停止しました。MP4をダウンロードできます。");
+          }
+
+          startRecBtn.disabled = false;
+          stopRecBtn.disabled = true;
+          recorder = null;
+        };
+
+        recorder.start(200);
+        setStatus("録画中です。スワイプして動画を作成してください。");
+        downloadEl.hidden = true;
+        startRecBtn.disabled = true;
+        stopRecBtn.disabled = false;
+      }
+
+      function stopRecording() {
+        if (!recorder || recorder.state === "inactive") return;
+        recorder.stop();
+      }
+
+      fileInput.addEventListener("change", onFilesSelected);
+      clearBtn.addEventListener("click", clearImages);
+      startRecBtn.addEventListener("click", startRecording);
+      stopRecBtn.addEventListener("click", stopRecording);
+
+      stage.addEventListener("pointerdown", onPointerDown);
+      stage.addEventListener("pointermove", onPointerMove);
+      stage.addEventListener("pointerup", onPointerUp);
+      stage.addEventListener("pointercancel", onPointerUp);
+
+      drawEmpty();
+    </script>
+  </body>
+</html>
