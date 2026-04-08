@@ -244,12 +244,16 @@
         const baseX = (stage.width - cardW) / 2;
         const baseY = (stage.height - cardH) / 2;
 
-        const next = state.cards[state.activeIndex + 1];
+        const next = state.cards[state.activeIndex + 1]?.image;
         if (next) {
           drawCard(next, baseX + 10, baseY + 12, cardW - 20, cardH - 20, 0.85);
         }
 
-        const current = state.cards[state.activeIndex];
+        const current = state.cards[state.activeIndex]?.image;
+        if (!current) {
+          drawEmpty();
+          return;
+        }
         ctx.save();
         ctx.translate(stage.width / 2 + state.dragX, stage.height / 2 + state.dragY);
         ctx.rotate((state.dragX / stage.width) * 0.25);
