@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>オレキシン作動薬の仕組み（Graphviz/DOT生成型）</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+        line-height: 1.7;
+      }
+
+      main {
+        width: min(960px, 100%);
+        margin: 0 auto;
+        padding: 20px 14px 36px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(1.45rem, 5vw, 2rem);
+      }
+
+      h2 {
+        margin: 24px 0 10px;
+        font-size: clamp(1.1rem, 3.8vw, 1.35rem);
+      }
+
+      p {
+        margin: 0 0 10px;
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+      }
+
+      .meta {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .meta div {
+        border-left: 4px solid #2563eb;
+        padding: 8px 10px;
+        background: #eff6ff;
+        border-radius: 8px;
+      }
+
+      #graph {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      #graph svg {
+        width: 100%;
+        height: auto;
+        min-width: 680px;
+      }
+
+      .small {
+        font-size: 0.94rem;
+        color: #334155;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>オレキシン作動薬の仕組み（Graphviz/DOT生成型）</h1>
+      <p>
+        このページは、AI が生成した DOT を Graphviz WASM でレイアウトし、SVG として表示する構成です。
+      </p>
+
+      <section class="card" aria-label="方式の要点">
+        <h2>方式の要点</h2>
+        <div class="meta">
+          <div><strong>生成:</strong> AI が DOT 文字列を生成し、自動配置します。</div>
+          <div><strong>描画:</strong> Graphviz WASM + SVG（ブラウザ内で完結）。</div>
+          <div><strong>用途:</strong> 技術文書で使われる定番構成で、配置品質が高い。</div>
+          <div><strong>注意:</strong> ノードが多い図ではブラウザ負荷が上がる場合があります。</div>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top: 16px" aria-label="作用機序の図">
+        <h2>オレキシン作動薬（OX1R/OX2R）の作用機序</h2>
+        <div id="graph" role="img" aria-label="オレキシン作動薬の作用機序フロー図"></div>
+        <p class="small" style="margin-top: 12px">
+          ※ 教育用の概略図です。臨床判断は必ず医療専門家の情報を確認してください。
+        </p>
+      </section>
+
+      <section class="card" style="margin-top: 16px" aria-label="DOTソース">
+        <h2>DOT（自動生成例）</h2>
+        <p class="small">以下の DOT を Graphviz で描画しています。</p>
+        <pre><code id="dotSource"></code></pre>
+      </section>
+    </main>
+
+    <script type="module">
+      import { instance } from "https://cdn.jsdelivr.net/npm/@viz-js/viz@3.11.0/+esm";
+
+      const dot = `digraph OrexinAgonist {
+  rankdir=LR;
+  bgcolor="transparent";
+  graph [fontname="Noto Sans JP", fontsize=12, labelloc="t"];
+  node [shape=box, style="rounded,filled", fontname="Noto Sans JP", fontsize=11, fillcolor="#f8fafc", color="#334155"];
+  edge [color="#475569", penwidth=1.2, arrowsize=0.8, fontname="Noto Sans JP", fontsize=10];
+
+  Drug [label="オレキシン作動薬\n(orexin receptor agonist)", fillcolor="#dbeafe", color="#2563eb"];
+  OX1R [label="OX1R 活性化\n(覚醒系ネットワーク)", fillcolor="#eef2ff", color="#4f46e5"];
+  OX2R [label="OX2R 活性化\n(睡眠-覚醒安定化)", fillcolor="#eef2ff", color="#4f46e5"];
+  LC [label="青斑核ノルアドレナリン系\n発火維持", fillcolor="#f1f5f9"];
+  TMN [label="結節乳頭体核ヒスタミン系\n覚醒シグナル増強", fillcolor="#f1f5f9"];
+  DR [label="縫線核セロトニン系\n覚醒・気分調整", fillcolor="#f1f5f9"];
+  Cortex [label="大脳皮質の覚醒度↑\n注意・反応性の改善", fillcolor="#dcfce7", color="#16a34a"];
+  Stability [label="睡眠-覚醒切替の不安定性↓\n日中覚醒維持", fillcolor="#dcfce7", color="#16a34a"];
+
+  Drug -> OX1R;
+  Drug -> OX2R;
+  OX1R -> LC;
+  OX1R -> DR;
+  OX2R -> TMN;
+  OX2R -> LC;
+  LC -> Cortex;
+  DR -> Cortex;
+  TMN -> Cortex;
+  OX2R -> Stability;
+  Cortex -> Stability [label="覚醒ドライブ増加"];
+}`;
+
+      document.getElementById("dotSource").textContent = dot;
+
+      const graphEl = document.getElementById("graph");
+
+      try {
+        const viz = await instance();
+        graphEl.innerHTML = viz.renderSVGElement(dot).outerHTML;
+      } catch (error) {
+        graphEl.innerHTML = `<p>図の描画に失敗しました。ブラウザを更新してください。<br><code>${String(error)}</code></p>`;
+      }
+    </script>
+  </body>
+</html>
