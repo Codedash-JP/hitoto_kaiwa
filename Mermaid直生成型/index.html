@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>オレキシン作動薬 | Mermaid直生成型</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+        line-height: 1.7;
+      }
+
+      main {
+        width: min(900px, 100%);
+        margin: 0 auto;
+        padding: 20px 14px 40px;
+      }
+
+      h1 {
+        font-size: clamp(1.5rem, 6vw, 2.1rem);
+        margin: 0 0 12px;
+      }
+
+      h2 {
+        font-size: clamp(1.1rem, 4.8vw, 1.4rem);
+        margin: 0 0 8px;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 12px;
+      }
+
+      .lead {
+        color: #334155;
+        margin-bottom: 12px;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 1.2em;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      pre {
+        margin: 0;
+        padding: 10px;
+        border-radius: 10px;
+        background: #0f172a;
+        color: #e2e8f0;
+        overflow-x: auto;
+        font-size: 0.86rem;
+      }
+
+      .tag {
+        display: inline-block;
+        font-size: 0.78rem;
+        color: #0369a1;
+        background: #e0f2fe;
+        border-radius: 999px;
+        padding: 4px 10px;
+        margin-bottom: 8px;
+        font-weight: 700;
+      }
+
+      .mermaid {
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>オレキシン作動薬の仕組み（Mermaid直生成型）</h1>
+      <p class="lead">
+        AIがMermaidコードを生成し、<code>mermaid.js</code>で即時描画する構成です。Mermaid
+        Chart連携を意識しつつ、実装最短で可視化できます。
+      </p>
+
+      <section class="card">
+        <h2>この方式の流れ</h2>
+        <div class="mermaid">
+flowchart TD
+    A[AIが図の要件を受け取る] --> B[Mermaidコードを直生成]
+    B --> C[mermaid.jsがブラウザで即時描画]
+    C --> D[オレキシン作動薬の作用機序を図示]
+    D --> E[必要に応じてMermaid Chartへ連携]
+    E --> F[共有・再編集]
+        </div>
+      </section>
+
+      <section class="card">
+        <span class="tag">作用機序イメージ</span>
+        <div class="mermaid">
+flowchart LR
+    OX[オレキシン作動薬] --> R[OX1R / OX2Rを刺激]
+    R --> W[覚醒ネットワーク活性化]
+    W --> M[眠気低減・覚醒維持を補助]
+    M --> D[日中活動の質向上をサポート]
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>メリットと限界</h2>
+        <ul>
+          <li><strong>実装最短:</strong> HTMLにMermaid記法を書くだけで表示できる。</li>
+          <li><strong>Mermaid Chart連携:</strong> コードをそのまま外部編集ツールに渡しやすい。</li>
+          <li><strong>複雑図に限界:</strong> ノード数が増えると可読性と保守性が下がる。</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>生成されたMermaidコード例</h2>
+<pre><code>flowchart LR
+    OX[オレキシン作動薬] --> R[OX1R / OX2Rを刺激]
+    R --> W[覚醒ネットワーク活性化]
+    W --> M[眠気低減・覚醒維持を補助]
+    M --> D[日中活動の質向上をサポート]</code></pre>
+      </section>
+    </main>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "default"
+      });
+    </script>
+  </body>
+</html>
