@@ -16,230 +16,491 @@
       body {
         margin: 0;
         min-height: 100vh;
-        display: grid;
-        place-items: center;
         font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
         background: radial-gradient(circle at top, #ffe9ef, #ffdfe8 40%, #f6f7fb 100%);
         color: #1f2937;
-        padding: 16px;
       }
 
       .app {
-        width: min(420px, 100%);
+        width: min(760px, 100%);
+        margin: 0 auto;
+        min-height: 100vh;
+        padding: 16px;
         display: grid;
         gap: 12px;
       }
 
       h1 {
         margin: 0;
-        font-size: clamp(1.5rem, 5.5vw, 2rem);
+        font-size: clamp(1.4rem, 5vw, 2rem);
       }
 
-      p {
-        margin: 0;
-        color: #4b5563;
-        line-height: 1.6;
+      .controls {
+        background: #ffffffdd;
+        border: 1px solid #fecdd3;
+        border-radius: 16px;
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .control-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      button,
+      select {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-weight: 700;
         font-size: 0.95rem;
       }
 
-      .card {
-        position: relative;
-        width: 100%;
-        aspect-ratio: 3 / 4;
-        border-radius: 24px;
-        overflow: hidden;
-        border: 1px solid #fecdd3;
-        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.15);
+      select {
+        border: 1px solid #fda4af;
         background: #fff;
+      }
+
+      button {
         cursor: pointer;
-        user-select: none;
       }
 
-      .card img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
+      .start {
+        background: #f43f5e;
+        color: #fff;
       }
 
-      .stamp {
-        position: absolute;
-        left: 16px;
-        top: 16px;
-        border: 4px solid #facc15;
-        color: #facc15;
-        border-radius: 10px;
-        font-size: clamp(2rem, 11vw, 3.2rem);
-        font-weight: 800;
-        line-height: 1;
-        padding: 6px 14px;
-        transform: rotate(-14deg) scale(0.6);
-        opacity: 0;
+      .stop {
+        background: #111827;
+        color: #fff;
       }
 
-      .stamp.show {
-        animation: pop-in 0.28s ease-out forwards;
+      .reset {
+        background: #e5e7eb;
+        color: #111827;
+      }
+
+      .stage-wrap {
+        display: grid;
+        place-items: center;
+        background: #ffffffb5;
+        border: 1px solid #ffd4df;
+        border-radius: 18px;
+        padding: 12px;
+      }
+
+      canvas {
+        width: min(100%, 420px);
+        aspect-ratio: 3 / 4;
+        border-radius: 18px;
+        touch-action: none;
+        background: #fff;
+      }
+
+      .status,
+      .tips,
+      .progress {
+        margin: 0;
+        font-size: 0.92rem;
+        color: #374151;
       }
 
       .progress {
         color: #be123c;
-        font-size: 0.95rem;
         font-weight: 700;
       }
 
-      .done {
-        display: none;
-        background: #ffffffd9;
-        border: 1px solid #fecdd3;
-        border-radius: 16px;
-        padding: 18px 14px;
-        text-align: center;
-      }
-
-      .done button {
-        margin-top: 12px;
-        border: none;
-        border-radius: 999px;
-        background: #f43f5e;
-        color: #fff;
-        font-weight: 700;
-        padding: 10px 16px;
-        cursor: pointer;
-      }
-
-      @keyframes pop-in {
-        from {
-          opacity: 0;
-          transform: rotate(-14deg) scale(0.6);
-        }
-        to {
-          opacity: 1;
-          transform: rotate(-14deg) scale(1);
-        }
+      .download-link {
+        display: inline-block;
+        font-size: 0.92rem;
+        color: #be123c;
+        word-break: break-all;
       }
     </style>
   </head>
   <body>
     <main class="app">
       <h1>Tinder2</h1>
-      <p>クリックのみで進行します。1回目のクリックで別バージョン、2回目で黄色スタンプ表示です。</p>
-      <div id="progress" class="progress"></div>
-      <div id="card" class="card" role="button" aria-label="カード">
-        <img id="cardImage" alt="プロフィール画像" />
-        <div id="stamp" class="stamp"></div>
-      </div>
-      <section id="done" class="done">
-        <strong>すべて完了！</strong>
-        <p>もう一度最初から見たい場合はリセットしてください。</p>
-        <button id="resetBtn" type="button">最初から</button>
+
+      <section class="controls">
+        <div class="control-row">
+          <label for="frameSelect">表示開始:</label>
+          <select id="frameSelect" aria-label="表示開始フレーム"></select>
+          <button id="resetBtn" class="reset" type="button">最初から</button>
+        </div>
+        <div class="control-row">
+          <button id="startRec" class="start" type="button">録画開始</button>
+          <button id="stopRec" class="stop" type="button" disabled>録画終了</button>
+        </div>
+        <p id="progress" class="progress"></p>
+        <p id="status" class="status"></p>
+        <a id="download" class="download-link" hidden></a>
       </section>
+
+      <section class="stage-wrap">
+        <canvas id="stage" width="420" height="560" aria-label="Tinder2ステージ"></canvas>
+      </section>
+
+      <p class="tips">操作: 2枚目・4枚目・6枚目は左右スワイプ、その他はタップで次へ進みます。7枚目もセレクトから直接選択できます。</p>
     </main>
 
     <script>
-      function makeSvgData(bgColor, title, subtitle) {
-        const svg = `
-<svg xmlns='http://www.w3.org/2000/svg' width='720' height='960' viewBox='0 0 720 960'>
-  <defs>
-    <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-      <stop offset='0%' stop-color='${bgColor}'/>
-      <stop offset='100%' stop-color='#111827'/>
-    </linearGradient>
-  </defs>
-  <rect width='100%' height='100%' fill='url(#g)'/>
-  <circle cx='360' cy='340' r='140' fill='rgba(255,255,255,0.18)'/>
-  <rect x='170' y='520' rx='18' ry='18' width='380' height='150' fill='rgba(255,255,255,0.2)'/>
-  <text x='360' y='575' text-anchor='middle' fill='#fff' font-size='54' font-family='sans-serif' font-weight='700'>${title}</text>
-  <text x='360' y='640' text-anchor='middle' fill='#fde68a' font-size='36' font-family='sans-serif'>${subtitle}</text>
-</svg>`;
-        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-      }
-
-      const cards = [
-        {
-          normal: makeSvgData("#f43f5e", "画像1", "通常"),
-          alt: makeSvgData("#e11d48", "画像2", "クリック後"),
-          stamp: "A",
-        },
-        {
-          normal: makeSvgData("#2563eb", "画像3", "通常"),
-          alt: makeSvgData("#1d4ed8", "画像4", "クリック後"),
-          stamp: "AA",
-        },
-        {
-          normal: makeSvgData("#16a34a", "画像5", "通常"),
-          alt: makeSvgData("#15803d", "画像6", "クリック後"),
-          stamp: "AAA",
-        },
-      ];
-
-      const cardEl = document.getElementById("card");
-      const cardImageEl = document.getElementById("cardImage");
-      const stampEl = document.getElementById("stamp");
-      const doneEl = document.getElementById("done");
+      const stage = document.getElementById("stage");
+      const ctx = stage.getContext("2d");
+      const frameSelect = document.getElementById("frameSelect");
       const resetBtn = document.getElementById("resetBtn");
+      const startRecBtn = document.getElementById("startRec");
+      const stopRecBtn = document.getElementById("stopRec");
       const progressEl = document.getElementById("progress");
+      const statusEl = document.getElementById("status");
+      const downloadEl = document.getElementById("download");
+
+      const swipeFrameIndexes = new Set([1, 3, 5]);
+      const frames = [
+        ["#f43f5e", "画像1", "タップで次へ"],
+        ["#fb7185", "画像2", "ここはスワイプ"],
+        ["#2563eb", "画像3", "タップで次へ"],
+        ["#60a5fa", "画像4", "ここはスワイプ"],
+        ["#16a34a", "画像5", "タップで次へ"],
+        ["#4ade80", "画像6", "ここはスワイプ"],
+        ["#7c3aed", "画像7", "7枚目を選択可能"],
+      ].map(([bg, title, subtitle], i) => ({ bg, title, subtitle, index: i }));
 
       const state = {
         index: 0,
-        phase: "normal",
-        locked: false,
+        dragX: 0,
+        dragY: 0,
+        dragging: false,
+        pointerId: null,
+        startX: 0,
+        startY: 0,
+        animating: false,
+        moved: false,
       };
 
-      function showCard() {
-        if (state.index >= cards.length) {
-          cardEl.style.display = "none";
-          progressEl.textContent = "3 / 3 完了";
-          doneEl.style.display = "block";
+      let recorder = null;
+      let chunks = [];
+      let animationHandle = 0;
+
+      function setStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function roundRectPath(x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + w, y, x + w, y + h, radius);
+        ctx.arcTo(x + w, y + h, x, y + h, radius);
+        ctx.arcTo(x, y + h, x, y, radius);
+        ctx.arcTo(x, y, x + w, y, radius);
+        ctx.closePath();
+      }
+
+      function drawLikeNope() {
+        if (!state.dragging && Math.abs(state.dragX) < 8) return;
+
+        const label = state.dragX >= 0 ? "LIKE" : "NOPE";
+        const color = state.dragX >= 0 ? "#16a34a" : "#dc2626";
+        const alpha = Math.min(Math.abs(state.dragX) / 120, 1);
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(stage.width / 2 + state.dragX * 0.15, 76);
+        ctx.rotate((state.dragX / stage.width) * 0.35);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 5;
+        ctx.strokeRect(-64, -26, 128, 52);
+        ctx.fillStyle = color;
+        ctx.font = "bold 30px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(label, 0, 11);
+        ctx.restore();
+      }
+
+      function drawFrame(frame, offsetX, offsetY, opacity) {
+        const cardW = stage.width * 0.86;
+        const cardH = stage.height * 0.86;
+        const x = (stage.width - cardW) / 2;
+        const y = (stage.height - cardH) / 2;
+
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.translate(stage.width / 2 + offsetX, stage.height / 2 + offsetY);
+        ctx.rotate((offsetX / stage.width) * 0.25);
+
+        roundRectPath(-cardW / 2, -cardH / 2, cardW, cardH, 24);
+        ctx.clip();
+
+        const grad = ctx.createLinearGradient(-cardW / 2, -cardH / 2, cardW / 2, cardH / 2);
+        grad.addColorStop(0, frame.bg);
+        grad.addColorStop(1, "#111827");
+        ctx.fillStyle = grad;
+        ctx.fillRect(-cardW / 2, -cardH / 2, cardW, cardH);
+
+        ctx.fillStyle = "rgba(255,255,255,0.18)";
+        ctx.beginPath();
+        ctx.arc(0, -90, 70, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(255,255,255,0.2)";
+        roundRectPath(-130, 70, 260, 120, 16);
+        ctx.fill();
+
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.font = "bold 46px sans-serif";
+        ctx.fillText(frame.title, 0, 140);
+
+        ctx.fillStyle = "#fde68a";
+        ctx.font = "30px sans-serif";
+        ctx.fillText(frame.subtitle, 0, 184);
+
+        ctx.restore();
+      }
+
+      function queueRender() {
+        cancelAnimationFrame(animationHandle);
+        animationHandle = requestAnimationFrame(render);
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, stage.width, stage.height);
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(0, 0, stage.width, stage.height);
+
+        if (state.index >= frames.length) {
+          ctx.fillStyle = "#6b7280";
+          ctx.font = "bold 24px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("すべて完了", stage.width / 2, stage.height / 2 - 8);
+          ctx.font = "16px sans-serif";
+          ctx.fillText("最初からボタンで再開できます", stage.width / 2, stage.height / 2 + 22);
+          progressEl.textContent = `${frames.length} / ${frames.length} 完了`;
+          setStatus("完了しました。7枚目はセレクトから再表示できます。");
           return;
         }
 
-        const current = cards[state.index];
-        stampEl.className = "stamp";
-        stampEl.textContent = "";
-        cardEl.style.display = "block";
-        doneEl.style.display = "none";
-
-        if (state.phase === "normal") {
-          cardImageEl.src = current.normal;
-        } else {
-          cardImageEl.src = current.alt;
+        const next = frames[state.index + 1];
+        if (next) {
+          drawFrame(next, 8, 10, 0.82);
         }
 
-        progressEl.textContent = `${state.index + 1} / ${cards.length}`;
+        const current = frames[state.index];
+        drawFrame(current, state.dragX, state.dragY, 1);
+
+        const isSwipeFrame = swipeFrameIndexes.has(state.index);
+        if (isSwipeFrame) {
+          drawLikeNope();
+        }
+
+        progressEl.textContent = `${state.index + 1} / ${frames.length}`;
+        frameSelect.value = String(state.index);
+        setStatus(
+          isSwipeFrame
+            ? "この画面は左右スワイプで次へ進みます。"
+            : "この画面はタップで次へ進みます。"
+        );
       }
 
-      function nextCard() {
+      function goNextFrame() {
         state.index += 1;
-        state.phase = "normal";
-        state.locked = false;
-        showCard();
+        state.dragX = 0;
+        state.dragY = 0;
+        state.animating = false;
+        state.moved = false;
+        queueRender();
       }
 
-      cardEl.addEventListener("click", () => {
-        if (state.locked || state.index >= cards.length) return;
-        const current = cards[state.index];
+      function animateBack() {
+        if (state.animating) return;
+        state.animating = true;
 
-        if (state.phase === "normal") {
-          state.phase = "alt";
-          cardImageEl.src = current.alt;
+        function step() {
+          state.dragX *= 0.72;
+          state.dragY *= 0.72;
+          if (Math.abs(state.dragX) < 1 && Math.abs(state.dragY) < 1) {
+            state.dragX = 0;
+            state.dragY = 0;
+            state.animating = false;
+            queueRender();
+            return;
+          }
+          queueRender();
+          requestAnimationFrame(step);
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      function animateOut(direction) {
+        if (state.animating) return;
+        state.animating = true;
+        const targetX = direction > 0 ? stage.width * 1.25 : -stage.width * 1.25;
+
+        function step() {
+          state.dragX += (targetX - state.dragX) * 0.22;
+          state.dragY *= 0.95;
+          queueRender();
+
+          if (Math.abs(targetX - state.dragX) < 4) {
+            goNextFrame();
+            return;
+          }
+          requestAnimationFrame(step);
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      function onPointerDown(event) {
+        if (state.index >= frames.length || state.animating || !swipeFrameIndexes.has(state.index)) return;
+        state.dragging = true;
+        state.moved = false;
+        state.pointerId = event.pointerId;
+        stage.setPointerCapture(event.pointerId);
+        state.startX = event.clientX;
+        state.startY = event.clientY;
+      }
+
+      function onPointerMove(event) {
+        if (!state.dragging || event.pointerId !== state.pointerId) return;
+        state.dragX = clamp(event.clientX - state.startX, -stage.width, stage.width);
+        state.dragY = clamp(event.clientY - state.startY, -120, 120);
+        state.moved = state.moved || Math.abs(state.dragX) > 6 || Math.abs(state.dragY) > 6;
+        queueRender();
+      }
+
+      function onPointerUp(event) {
+        if (!state.dragging || event.pointerId !== state.pointerId) return;
+        state.dragging = false;
+        stage.releasePointerCapture(event.pointerId);
+
+        if (Math.abs(state.dragX) > stage.width * 0.23) {
+          animateOut(state.dragX >= 0 ? 1 : -1);
+        } else {
+          animateBack();
+        }
+      }
+
+      function onTap(event) {
+        if (state.index >= frames.length || state.animating) return;
+        if (swipeFrameIndexes.has(state.index)) return;
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+        goNextFrame();
+      }
+
+      function pickRecorderMimeType() {
+        const candidates = [
+          "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+          "video/mp4",
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+        ];
+
+        for (const type of candidates) {
+          if (MediaRecorder.isTypeSupported(type)) return type;
+        }
+        return "";
+      }
+
+      function startRecording() {
+        if (!window.MediaRecorder) {
+          setStatus("このブラウザは録画に対応していません。");
           return;
         }
 
-        state.locked = true;
-        stampEl.textContent = current.stamp;
-        stampEl.classList.add("show");
+        const mimeType = pickRecorderMimeType();
+        if (!mimeType) {
+          setStatus("利用可能な録画コーデックが見つかりませんでした。");
+          return;
+        }
 
-        setTimeout(nextCard, 700);
+        const stream = stage.captureStream(60);
+        recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+        chunks = [];
+
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) chunks.push(event.data);
+        };
+
+        recorder.onstop = () => {
+          const isMp4 = mimeType.includes("mp4");
+          const extension = isMp4 ? "mp4" : "webm";
+          const blob = new Blob(chunks, { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          downloadEl.href = url;
+          downloadEl.download = `tinder2-recording.${extension}`;
+          downloadEl.textContent = `録画をダウンロード (${extension.toUpperCase()})`;
+          downloadEl.hidden = false;
+
+          if (!isMp4) {
+            setStatus("MP4未対応ブラウザのためWebMで保存しました。MP4対応ブラウザではMP4保存できます。");
+          } else {
+            setStatus("録画を停止しました。MP4をダウンロードできます。");
+          }
+
+          startRecBtn.disabled = false;
+          stopRecBtn.disabled = true;
+          recorder = null;
+        };
+
+        recorder.start(200);
+        setStatus("録画中です。操作して動画を作成してください。");
+        downloadEl.hidden = true;
+        startRecBtn.disabled = true;
+        stopRecBtn.disabled = false;
+      }
+
+      function stopRecording() {
+        if (!recorder || recorder.state === "inactive") return;
+        recorder.stop();
+      }
+
+      function resetTo(index) {
+        state.index = index;
+        state.dragX = 0;
+        state.dragY = 0;
+        state.dragging = false;
+        state.pointerId = null;
+        state.animating = false;
+        state.moved = false;
+        queueRender();
+      }
+
+      frames.forEach((frame, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = `${index + 1}枚目 (${frame.title})`;
+        frameSelect.append(option);
       });
 
-      resetBtn.addEventListener("click", () => {
-        state.index = 0;
-        state.phase = "normal";
-        state.locked = false;
-        showCard();
+      frameSelect.addEventListener("change", (event) => {
+        const selected = Number(event.target.value);
+        if (Number.isNaN(selected)) return;
+        resetTo(clamp(selected, 0, frames.length - 1));
       });
 
-      showCard();
+      resetBtn.addEventListener("click", () => resetTo(0));
+      startRecBtn.addEventListener("click", startRecording);
+      stopRecBtn.addEventListener("click", stopRecording);
+
+      stage.addEventListener("pointerdown", onPointerDown);
+      stage.addEventListener("pointermove", onPointerMove);
+      stage.addEventListener("pointerup", onPointerUp);
+      stage.addEventListener("pointercancel", onPointerUp);
+      stage.addEventListener("click", onTap);
+
+      resetTo(0);
     </script>
   </body>
 </html>
