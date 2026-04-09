@@ -170,15 +170,9 @@
 
       const swipeOrder = [1, 3, 5];
       const swipeFrameIndexes = new Set(swipeOrder);
-      const frames = [
-        ["#f43f5e", "画像1", "タップで次へ"],
-        ["#fb7185", "画像2", "ここはスワイプ"],
-        ["#2563eb", "画像3", "タップで次へ"],
-        ["#60a5fa", "画像4", "ここはスワイプ"],
-        ["#16a34a", "画像5", "タップで次へ"],
-        ["#4ade80", "画像6", "ここはスワイプ"],
-        ["#7c3aed", "画像7", "7枚目を選択可能"],
-      ].map(([bg, title, subtitle], i) => ({ bg, title, subtitle, index: i }));
+      const frames = ["#f43f5e", "#fb7185", "#2563eb", "#60a5fa", "#16a34a", "#4ade80", "#7c3aed"].map(
+        (bg, i) => ({ bg, index: i })
+      );
 
       const uploadedImages = new Array(frames.length).fill(null);
       const uploadedObjectUrls = new Array(frames.length).fill(null);
@@ -269,8 +263,6 @@
         const uploadedImage = uploadedImages[frame.index];
         if (uploadedImage) {
           drawCoverImage(uploadedImage, -cardW / 2, -cardH / 2, cardW, cardH);
-          ctx.fillStyle = "rgba(17, 24, 39, 0.28)";
-          ctx.fillRect(-cardW / 2, -cardH / 2, cardW, cardH);
         } else {
           const grad = ctx.createLinearGradient(-cardW / 2, -cardH / 2, cardW / 2, cardH / 2);
           grad.addColorStop(0, frame.bg);
@@ -287,15 +279,6 @@
           roundRectPath(-130, 70, 260, 120, 16);
           ctx.fill();
         }
-
-        ctx.fillStyle = "#fff";
-        ctx.textAlign = "center";
-        ctx.font = "bold 46px sans-serif";
-        ctx.fillText(frame.title, 0, 140);
-
-        ctx.fillStyle = "#fde68a";
-        ctx.font = "30px sans-serif";
-        ctx.fillText(frame.subtitle, 0, 184);
 
         ctx.restore();
       }
@@ -555,7 +538,7 @@
       frames.forEach((frame, index) => {
         const option = document.createElement("option");
         option.value = String(index);
-        option.textContent = `${index + 1}枚目 (${frame.title})`;
+        option.textContent = `${index + 1}枚目`;
         frameSelect.append(option);
       });
 
