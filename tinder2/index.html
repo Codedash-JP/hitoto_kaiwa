@@ -533,10 +533,12 @@
               URL.revokeObjectURL(uploadedObjectUrls[index]);
             }
             uploadedObjectUrls[index] = url;
+            uploadedImages[index] = image;
             resolve(image);
           };
           image.onerror = () => {
             URL.revokeObjectURL(url);
+            uploadedImages[index] = null;
             resolve(null);
           };
           image.src = url;
