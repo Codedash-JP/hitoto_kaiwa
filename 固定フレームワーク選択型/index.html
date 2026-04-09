@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>オレキシン作動薬｜固定フレームワーク選択型</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #0f172a;
+        --sub: #475569;
+        --line: #dbe4ee;
+        --accent: #2563eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+        line-height: 1.7;
+      }
+
+      .container {
+        width: min(900px, 100%);
+        margin: 0 auto;
+        padding: 20px 14px 40px;
+      }
+
+      h1 {
+        font-size: clamp(1.5rem, 5vw, 2.2rem);
+        margin: 0 0 10px;
+      }
+
+      .lead {
+        margin: 0 0 18px;
+        color: var(--sub);
+      }
+
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 14px;
+      }
+
+      .chip {
+        display: inline-block;
+        background: #e8f0ff;
+        color: #1546a0;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 0.84rem;
+        margin-bottom: 8px;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+        margin: 4px 0 8px;
+      }
+
+      ul {
+        margin: 8px 0 0;
+        padding-left: 1.1rem;
+      }
+
+      .flow-wrap {
+        overflow-x: auto;
+      }
+
+      svg {
+        width: 100%;
+        min-width: 760px;
+        height: auto;
+        display: block;
+      }
+
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      pre {
+        margin: 0;
+        background: #0b1220;
+        color: #dbeafe;
+        padding: 12px;
+        border-radius: 10px;
+        overflow-x: auto;
+        font-size: 0.86rem;
+      }
+
+      .small {
+        font-size: 0.9rem;
+        color: var(--sub);
+      }
+
+      @media (max-width: 640px) {
+        .container {
+          padding: 16px 12px 28px;
+        }
+
+        .panel {
+          padding: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <h1>オレキシン作動薬の説明ページ（固定フレームワーク選択型）</h1>
+      <p class="lead">
+        このページは、
+        <strong>「固定フレームワーク選択型」</strong>
+        の仕組みで、オレキシン作動薬の働きを一定品質で説明する例です。
+      </p>
+
+      <section class="panel">
+        <span class="chip">採用した仕組み</span>
+        <h2>固定フレームワーク選択型</h2>
+        <ul>
+          <li>事前定義テンプレートから AI が最適な説明枠を選択。</li>
+          <li>説明内容を JSON Schema で構造化。</li>
+          <li>構造データから SVG 図を描画。</li>
+          <li>Miro AI テンプレ提案に近い運用で、説明のばらつきを抑制。</li>
+          <li>結果として品質が安定し、読み手が比較しやすい。</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <span class="chip">オレキシン作動薬の要点</span>
+        <h2>作用の流れ（要約）</h2>
+        <ul>
+          <li>オレキシン受容体（OX1R/OX2R）を活性化し、覚醒維持ネットワークを後押し。</li>
+          <li>視床下部から脳幹・大脳皮質へつながる覚醒系の活動を高める。</li>
+          <li>日中の眠気低減や覚醒レベルの底上げが期待される。</li>
+          <li>標的や半減期により、効果の立ち上がり・持続時間は異なる。</li>
+        </ul>
+        <p class="small">
+          ※一般向けの説明です。実際の適応・用量・安全性は製品情報と医療専門家の判断に従ってください。
+        </p>
+      </section>
+
+      <section class="panel">
+        <span class="chip">JSON Schema + SVG描画</span>
+        <h2>固定テンプレートに流し込む構造データ</h2>
+        <pre id="json"></pre>
+      </section>
+
+      <section class="panel">
+        <h2>構造データから描画したフロー図</h2>
+        <div class="flow-wrap">
+          <svg id="flow" viewBox="0 0 980 280" role="img" aria-label="オレキシン作動薬の作用フロー"></svg>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const frameworkData = {
+        schema: "orexin-agonist-flow/v1",
+        template: "fixed-framework-selection",
+        title: "オレキシン作動薬の作用フロー",
+        nodes: [
+          { id: "n1", label: "投与", detail: "オレキシン作動薬" },
+          { id: "n2", label: "受容体活性化", detail: "OX1R / OX2R" },
+          { id: "n3", label: "覚醒系促進", detail: "脳幹・視床・皮質" },
+          { id: "n4", label: "臨床的アウトカム", detail: "日中の眠気を低減" }
+        ],
+        edges: [
+          ["n1", "n2"],
+          ["n2", "n3"],
+          ["n3", "n4"]
+        ],
+        quality: "stable"
+      };
+
+      document.getElementById("json").textContent = JSON.stringify(frameworkData, null, 2);
+
+      const svg = document.getElementById("flow");
+      const layout = {
+        n1: { x: 30, y: 70 },
+        n2: { x: 265, y: 70 },
+        n3: { x: 500, y: 70 },
+        n4: { x: 735, y: 70 }
+      };
+      const boxW = 210;
+      const boxH = 130;
+
+      const make = (name, attrs = {}) => {
+        const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+        Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+        return el;
+      };
+
+      frameworkData.edges.forEach(([from, to]) => {
+        const start = layout[from];
+        const end = layout[to];
+        const line = make("line", {
+          x1: start.x + boxW,
+          y1: start.y + boxH / 2,
+          x2: end.x,
+          y2: end.y + boxH / 2,
+          stroke: "#93a4bb",
+          "stroke-width": "3"
+        });
+        svg.appendChild(line);
+
+        const arrow = make("polygon", {
+          points: `${end.x - 10},${end.y + boxH / 2 - 8} ${end.x},${end.y + boxH / 2} ${end.x - 10},${end.y + boxH / 2 + 8}`,
+          fill: "#93a4bb"
+        });
+        svg.appendChild(arrow);
+      });
+
+      frameworkData.nodes.forEach((node) => {
+        const p = layout[node.id];
+        const box = make("rect", {
+          x: p.x,
+          y: p.y,
+          width: boxW,
+          height: boxH,
+          rx: "16",
+          fill: "#ffffff",
+          stroke: "#dbe4ee",
+          "stroke-width": "2"
+        });
+        svg.appendChild(box);
+
+        const title = make("text", {
+          x: p.x + 16,
+          y: p.y + 44,
+          fill: "#0f172a",
+          "font-size": "24",
+          "font-weight": "700"
+        });
+        title.textContent = node.label;
+        svg.appendChild(title);
+
+        const detail = make("text", {
+          x: p.x + 16,
+          y: p.y + 84,
+          fill: "#334155",
+          "font-size": "20"
+        });
+        detail.textContent = node.detail;
+        svg.appendChild(detail);
+      });
+    </script>
+  </body>
+</html>
