@@ -51,6 +51,24 @@
         align-items: center;
       }
 
+      .upload-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .upload-row {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+      }
+
+      .upload-label {
+        font-weight: 700;
+        color: #9f1239;
+        font-size: 0.9rem;
+      }
+
       .file-input {
         max-width: 100%;
       }
@@ -132,8 +150,11 @@
 
       <section class="controls">
         <div class="control-row">
-          <label for="imageUpload">画像アップロード(最大7枚):</label>
-          <input id="imageUpload" class="file-input" type="file" accept="image/*" multiple />
+          <span>画像アップロード(番号ごと):</span>
+        </div>
+        <div id="uploadGrid" class="upload-grid" aria-label="番号別画像アップロード"></div>
+        <div class="control-row">
+          <button id="clearImagesBtn" class="reset" type="button">画像をクリア</button>
         </div>
         <div class="control-row">
           <label for="frameSelect">表示開始:</label>
@@ -159,7 +180,8 @@
     <script>
       const stage = document.getElementById("stage");
       const ctx = stage.getContext("2d");
-      const imageUpload = document.getElementById("imageUpload");
+      const uploadGrid = document.getElementById("uploadGrid");
+      const clearImagesBtn = document.getElementById("clearImagesBtn");
       const frameSelect = document.getElementById("frameSelect");
       const resetBtn = document.getElementById("resetBtn");
       const startRecBtn = document.getElementById("startRec");
@@ -494,6 +516,16 @@
 
       function loadImageFromFile(file, index) {
         return new Promise((resolve) => {
+          if (!file) {
+            if (uploadedObjectUrls[index]) {
+              URL.revokeObjectURL(uploadedObjectUrls[index]);
+              uploadedObjectUrls[index] = null;
+            }
+            uploadedImages[index] = null;
+            resolve(null);
+            return;
+          }
+
           const url = URL.createObjectURL(file);
           const image = new Image();
           image.onload = () => {
@@ -511,14 +543,21 @@
         });
       }
 
-      async function handleImageUpload(event) {
-        const files = Array.from(event.target.files || []).slice(0, frames.length);
-        if (!files.length) {
-          setStatus("画像が選択されていません。既存画像で表示中です。");
-          return;
+      async function handleImageUploadByIndex(event) {
+        const index = Number(event.target.dataset.index);
+        if (Number.isNaN(index)) return;
+        const file = event.target.files?.[0] || null;
+        const image = await loadImageFromFile(file, index);
+        if (image) {
+          setStatus(`${index + 1}枚目の画像を更新しました。`);
+        } else {
+          setStatus(`${index + 1}枚目の画像をクリアしました。`);
         }
+        queueRender();
+      }
 
-        for (let i = files.length; i < frames.length; i += 1) {
+      function clearAllImages() {
+        for (let i = 0; i < frames.length; i += 1) {
           if (uploadedObjectUrls[i]) {
             URL.revokeObjectURL(uploadedObjectUrls[i]);
             uploadedObjectUrls[i] = null;
@@ -526,13 +565,34 @@
           uploadedImages[i] = null;
         }
 
-        const loaded = await Promise.all(files.map((file, i) => loadImageFromFile(file, i)));
-        loaded.forEach((image, index) => {
-          uploadedImages[index] = image;
+        uploadGrid.querySelectorAll("input[type='file']").forEach((input) => {
+          input.value = "";
         });
-
-        setStatus(`${loaded.filter(Boolean).length}枚の画像を読み込みました。未指定のカードは既定デザインを表示します。`);
+        setStatus("すべての画像をクリアしました。");
         queueRender();
+      }
+
+      function buildUploadInputs() {
+        frames.forEach((_, index) => {
+          const row = document.createElement("div");
+          row.className = "upload-row";
+
+          const label = document.createElement("label");
+          label.className = "upload-label";
+          label.setAttribute("for", `imageUpload-${index}`);
+          label.textContent = `${index + 1}枚目`;
+
+          const input = document.createElement("input");
+          input.id = `imageUpload-${index}`;
+          input.className = "file-input";
+          input.type = "file";
+          input.accept = "image/*";
+          input.dataset.index = String(index);
+          input.addEventListener("change", handleImageUploadByIndex);
+
+          row.append(label, input);
+          uploadGrid.append(row);
+        });
       }
 
       frames.forEach((frame, index) => {
@@ -548,7 +608,8 @@
         resetTo(clamp(selected, 0, frames.length - 1));
       });
 
-      imageUpload.addEventListener("change", handleImageUpload);
+      buildUploadInputs();
+      clearImagesBtn.addEventListener("click", clearAllImages);
       resetBtn.addEventListener("click", () => resetTo(0));
       startRecBtn.addEventListener("click", startRecording);
       stopRecBtn.addEventListener("click", stopRecording);
