@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>オレキシン作動薬 | DSL中間表現型</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+        background: #f3f6fb;
+        color: #0f172a;
+        line-height: 1.7;
+      }
+
+      main {
+        width: min(980px, 100%);
+        margin: 0 auto;
+        padding: 20px 14px 48px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(1.5rem, 5vw, 2.2rem);
+      }
+
+      .lead {
+        margin: 0 0 20px;
+        color: #334155;
+        font-size: clamp(0.95rem, 3.5vw, 1.08rem);
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid #dbe5f4;
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 14px;
+      }
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: clamp(1.1rem, 4.2vw, 1.35rem);
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #0b1220;
+        color: #dbeafe;
+        padding: 12px;
+        border-radius: 10px;
+        overflow: auto;
+        font-size: 0.88rem;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .chip {
+        background: #e8eefc;
+        color: #1e3a8a;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.82rem;
+        display: inline-flex;
+      }
+
+      .arrow {
+        font-weight: 700;
+        color: #475569;
+        text-align: center;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 10px;
+        background: #1d4ed8;
+        color: white;
+        padding: 10px 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .muted {
+        color: #475569;
+        font-size: 0.95rem;
+      }
+
+      @media (min-width: 760px) {
+        .flow {
+          grid-template-columns: 1fr auto 1fr auto 1fr;
+          align-items: center;
+        }
+
+        .arrow {
+          padding: 0 4px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>オレキシン作動薬を DSL中間表現型 で説明</h1>
+      <p class="lead">
+        「自然文 → DSL → レンダリング」の流れで、
+        オレキシン作動薬（OX2R活性化による覚醒維持）の仕組みを、
+        nodes/edges JSON標準とMermaid系記法思想で可視化します。
+      </p>
+
+      <section class="card">
+        <h2>1) 自然文 → DSL → レンダリング</h2>
+        <div class="flow" aria-label="変換フロー">
+          <span class="chip">自然文</span>
+          <span class="arrow">→</span>
+          <span class="chip">DSL（中間表現）</span>
+          <span class="arrow">→</span>
+          <span class="chip">レンダリング</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2) 自然文（入力例）</h2>
+        <p class="muted">短文の知識記述を、機械処理しやすい構造へ落とし込みます。</p>
+        <pre id="natural"></pre>
+      </section>
+
+      <section class="card">
+        <h2>3) DSL（中間表現）</h2>
+        <p class="muted">因果関係を「主語 / 関係 / 目的語 / 効果極性」で表現します。</p>
+        <pre id="dsl"></pre>
+      </section>
+
+      <section class="card">
+        <h2>4) nodes / edges JSON標準</h2>
+        <p class="muted">UI描画や他システム連携向けの標準的グラフJSONです。</p>
+        <pre id="json"></pre>
+      </section>
+
+      <section class="card">
+        <h2>5) Mermaid系記法思想（テキストで図を記述）</h2>
+        <p class="muted">読みやすい一行関係を重ねて、構造を明示します。</p>
+        <pre id="mermaid"></pre>
+      </section>
+
+      <section class="card">
+        <h2>6) レンダリング結果（簡易テキストビュー）</h2>
+        <p class="muted">Mermaid実行環境がなくても、関連を順に追える表示です。</p>
+        <button id="renderBtn" type="button">レンダリング更新</button>
+        <pre id="rendered" style="margin-top: 10px"></pre>
+      </section>
+    </main>
+
+    <script>
+      const naturalText = [
+        "オレキシン作動薬はOX2受容体を活性化する。",
+        "OX2受容体活性化は覚醒ネットワーク活動を高める。",
+        "覚醒ネットワーク活動の上昇は覚醒維持を促進する。",
+        "覚醒維持の促進は日中の過度な眠気を減らす。"
+      ].join("\n");
+
+      const dsl = {
+        entity: "orexin_agonist_mechanism",
+        statements: [
+          { subject: "オレキシン作動薬", relation: "activates", object: "OX2受容体", polarity: "+" },
+          { subject: "OX2受容体", relation: "increases", object: "覚醒ネットワーク活動", polarity: "+" },
+          { subject: "覚醒ネットワーク活動", relation: "promotes", object: "覚醒維持", polarity: "+" },
+          { subject: "覚醒維持", relation: "reduces", object: "日中の過度な眠気", polarity: "-" }
+        ]
+      };
+
+      const graph = {
+        nodes: [
+          { id: "drug", label: "オレキシン作動薬", type: "drug" },
+          { id: "ox2r", label: "OX2受容体", type: "receptor" },
+          { id: "arousal_network", label: "覚醒ネットワーク活動", type: "network" },
+          { id: "wake_maintenance", label: "覚醒維持", type: "state" },
+          { id: "sleepiness", label: "日中の過度な眠気", type: "symptom" }
+        ],
+        edges: [
+          { source: "drug", target: "ox2r", relation: "activates", sign: "+" },
+          { source: "ox2r", target: "arousal_network", relation: "increases", sign: "+" },
+          { source: "arousal_network", target: "wake_maintenance", relation: "promotes", sign: "+" },
+          { source: "wake_maintenance", target: "sleepiness", relation: "reduces", sign: "-" }
+        ]
+      };
+
+      function toMermaid(g) {
+        const labelById = Object.fromEntries(g.nodes.map((n) => [n.id, n.label]));
+        const lines = ["graph LR"];
+        g.edges.forEach((e) => {
+          lines.push(`  ${e.source}[${labelById[e.source]}] -->|${e.relation} ${e.sign}| ${e.target}[${labelById[e.target]}]`);
+        });
+        return lines.join("\n");
+      }
+
+      function renderText(g) {
+        const labelById = Object.fromEntries(g.nodes.map((n) => [n.id, n.label]));
+        return g.edges
+          .map((e, i) => `${i + 1}. ${labelById[e.source]} --(${e.relation} ${e.sign})--> ${labelById[e.target]}`)
+          .join("\n");
+      }
+
+      document.getElementById("natural").textContent = naturalText;
+      document.getElementById("dsl").textContent = JSON.stringify(dsl, null, 2);
+      document.getElementById("json").textContent = JSON.stringify(graph, null, 2);
+      document.getElementById("mermaid").textContent = toMermaid(graph);
+
+      const rendered = document.getElementById("rendered");
+      const update = () => {
+        rendered.textContent = renderText(graph);
+      };
+
+      document.getElementById("renderBtn").addEventListener("click", update);
+      update();
+    </script>
+  </body>
+</html>
