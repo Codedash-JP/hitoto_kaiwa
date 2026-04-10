@@ -361,12 +361,32 @@
       }
 
       function drawDispenserPhoto() {
+        if (state.phase === "drop") return;
         if (state.index === 0 && state.phase === "idle") return;
+
         const shownIndex = clamp(state.index - 1, 0, frames.length - 1);
         const p = clamp(state.revealProgress, 0, 1);
-        const y = stage.height - 165 - (1 - p) * 90;
-        const scale = 0.84 + p * 0.16;
-        drawPhotoCard(shownIndex, stage.width / 2, y, scale, 0.28 + p * 0.72);
+
+        if (p <= 0.01) return;
+
+        ctx.save();
+        ctx.globalAlpha = 0.2 + p * 0.8;
+        roundRectPath(0, 0, stage.width, stage.height, 24);
+        ctx.clip();
+
+        const image = uploadedImages[shownIndex];
+        if (image) {
+          drawCoverImage(image, 0, 0, stage.width, stage.height);
+        } else {
+          const frame = frames[shownIndex];
+          const grad = ctx.createLinearGradient(0, 0, stage.width, stage.height);
+          grad.addColorStop(0, frame.bg);
+          grad.addColorStop(1, "#111827");
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, stage.width, stage.height);
+        }
+
+        ctx.restore();
       }
 
       function drawDoneMessage() {
