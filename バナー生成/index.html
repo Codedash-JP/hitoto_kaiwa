@@ -161,9 +161,20 @@
           モデル
           <select id="model">
             <option value="gemini-2.5-flash-image">gemini-2.5-flash-image</option>
+            <option value="gemini-2.5-flash-image-preview">gemini-2.5-flash-image-preview</option>
+            <option value="gemini-2.5-pro-image-preview">gemini-2.5-pro-image-preview</option>
+            <option value="gemini-2.0-flash-preview-image-generation">gemini-2.0-flash-preview-image-generation</option>
+            <option value="gemini-2.0-flash-exp-image-generation">gemini-2.0-flash-exp-image-generation</option>
             <option value="gemini-3.1-flash-image-preview">gemini-3.1-flash-image-preview</option>
           </select>
         </label>
+        <div class="row">
+          <button id="insertImageBtn" type="button">画像を差し込み</button>
+          <input id="imageFile" type="file" accept="image/*" hidden />
+        </div>
+        <p style="margin: 0; font-size: 0.9rem; color: #475569">
+          外部画像はこのページ上で <strong>Ctrl + V / ⌘ + V</strong> で貼り付け可能です（クリップボード画像のみ）。
+        </p>
         <div class="row">
           <label>
             比率
@@ -240,6 +251,8 @@
         bandText: document.getElementById("bandText"),
         generateBtn: document.getElementById("generateBtn"),
         downloadBtn: document.getElementById("downloadBtn"),
+        insertImageBtn: document.getElementById("insertImageBtn"),
+        imageFile: document.getElementById("imageFile"),
         status: document.getElementById("status"),
         canvas: document.getElementById("canvas"),
       };
@@ -256,6 +269,31 @@
 
       function setStatus(message) {
         el.status.textContent = message;
+      }
+
+      function applyImageFile(file) {
+        if (!file || !file.type.startsWith("image/")) {
+          setStatus("画像ファイルを選択または貼り付けしてください。");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            generatedImage = img;
+            redrawCanvas();
+            setStatus("画像を差し込みました。テキストや帯色を調整できます。");
+          };
+          img.onerror = () => {
+            setStatus("画像の読み込みに失敗しました。別の画像を試してください。");
+          };
+          img.src = reader.result;
+        };
+        reader.onerror = () => {
+          setStatus("画像ファイルの読み込みに失敗しました。");
+        };
+        reader.readAsDataURL(file);
       }
 
       function splitLines(text) {
@@ -415,6 +453,30 @@
 
       el.generateBtn.addEventListener("click", generateImage);
       el.downloadBtn.addEventListener("click", downloadPng);
+      el.insertImageBtn.addEventListener("click", () => el.imageFile.click());
+      el.imageFile.addEventListener("change", () => {
+        const file = el.imageFile.files?.[0];
+        applyImageFile(file);
+        el.imageFile.value = "";
+      });
+
+      document.addEventListener("paste", (event) => {
+        const items = Array.from(event.clipboardData?.items || []);
+        const imageItem = items.find((item) => item.type.startsWith("image/"));
+
+        if (!imageItem) {
+          return;
+        }
+
+        const file = imageItem.getAsFile();
+        if (!file) {
+          setStatus("クリップボード画像の取得に失敗しました。");
+          return;
+        }
+
+        event.preventDefault();
+        applyImageFile(file);
+      });
 
       redrawCanvas();
     </script>
