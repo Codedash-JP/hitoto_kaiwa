@@ -23,10 +23,11 @@
       font-family: 'Noto Sans JP', sans-serif;
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       background: #fef3e8;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     .blob {
@@ -57,23 +58,120 @@
     .scene {
       position: relative;
       z-index: 1;
-      width: min(520px, calc(100vw - 32px));
-      padding: 20px;
+      width: min(960px, calc(100vw - 32px));
+      padding: 32px 20px 48px;
     }
 
-    /* ---- Splash ---- */
+    /* ---- Splash layout ---- */
     #splash {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .splash-cta {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 24px;
+      gap: 20px;
       text-align: center;
+      position: sticky;
+      top: 32px;
+    }
+
+    /* ---- FAQ ---- */
+    .faq-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-heading {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #8c6552;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .faq-item {
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(224,122,95,0.15);
+      transition: box-shadow 0.2s;
+    }
+
+    .faq-item:hover {
+      box-shadow: 0 4px 16px rgba(224,122,95,0.15);
+    }
+
+    .faq-q {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 14px 18px;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #5c3d2e;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      line-height: 1.5;
+    }
+
+    .faq-q::after {
+      content: '+';
+      font-size: 1.2rem;
+      color: #e07a5f;
+      flex-shrink: 0;
+      transition: transform 0.25s ease;
+      line-height: 1;
+    }
+
+    .faq-item.open .faq-q::after {
+      transform: rotate(45deg);
+    }
+
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.25s ease;
+      font-size: 0.88rem;
+      color: #6b4c3b;
+      line-height: 1.75;
+      padding: 0 18px;
+    }
+
+    .faq-item.open .faq-a {
+      max-height: 300px;
+      padding: 0 18px 14px;
+    }
+
+    @media (max-width: 640px) {
+      #splash {
+        grid-template-columns: 1fr;
+      }
+      .splash-cta {
+        position: static;
+        order: -1;
+      }
+      .faq-section {
+        order: 1;
+      }
     }
 
     .splash-title {
       font-family: 'Outfit', sans-serif;
-      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
       font-weight: 900;
       color: #5c3d2e;
     }
@@ -111,6 +209,13 @@
     #form-area {
       display: none;
       flex-direction: column;
+      width: min(520px, 100%);
+      margin: 0 auto;
+    }
+
+    #done-area {
+      width: min(520px, 100%);
+      margin: 0 auto;
     }
 
     .progress-bar-wrap {
@@ -343,15 +448,60 @@
 
     <!-- Splash -->
     <div id="splash">
-      <p class="splash-title" id="splash-title">Go on, click me!</p>
-      <button class="pen-btn" id="pen-btn" aria-label="フォームを開く">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#e07a5f" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M12 20h9" />
-          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-        </svg>
-      </button>
-      <p class="splash-sub" id="splash-sub">クリックしてフォームを開始します</p>
+
+      <!-- Left: FAQ -->
+      <div class="faq-section" id="faq-section">
+        <p class="faq-heading">よくある質問</p>
+
+        <div class="faq-item">
+          <button class="faq-q">このサービスの目的は何ですか？</button>
+          <div class="faq-a">一ノ瀬俊は仮名で、副業でこのビジネスをしています。名前も所属も明かさないことで「本質」で自分を試してみたいと思い、経営支援チャットサービスにチャレンジすることにいたしました。</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">アウトプットの質が分からないのですが？</button>
+          <div class="faq-a">クーポンコードを入力することで、お試しいただけます。まずは気軽にご体験ください。</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">本当に信頼できるか分かりません</button>
+          <div class="faq-a">個人情報のご入力はお控えいただいても結構です。本質的なお悩みだけをお聞かせください。</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">なぜそれほど安くサービス提供できるのですか？</button>
+          <div class="faq-a">AIをバックエンドでフル活用しています。本当に人の役に立つことだけをしたい、アウトプットの形式は固定、という方針でコストを抑えております。</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">ClaudeやChatGPTでよいのではないですか？</button>
+          <div class="faq-a">「ある程度まとまった作業をする・ビジネスの温度感・日本特有の文化への理解」が強みです。AIよりも反応は遅いものの、人間が介在することでAI以上の品質を目指しております。</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">通常の伴走支援の方がクオリティが高いのでは？</button>
+          <div class="faq-a">アウトプットをご覧になってからクオリティをご判断いただければ幸いです。月額支援のお申し込みとなった場合の価格は月1万円からです。通常の伴走支援は月1回のメンタリングだけで5万円はしますが、当サービスでは月1万円から、通常は準備に時間をかけないと得られないようなアウトプットをお届けいたします。</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">無駄に時間を奪われたくないのですが</button>
+          <div class="faq-a">チャットというシンプルなUIで、ほんの少しのインプットをもとに「本質的なアウトプットを納品」いたします。AIの文章が冗長になりがちな問題を解決し、要点だけをお届けします。</div>
+        </div>
+      </div>
+
+      <!-- Right: CTA -->
+      <div class="splash-cta">
+        <p class="splash-title" id="splash-title">Go on, click me!</p>
+        <button class="pen-btn" id="pen-btn" aria-label="フォームを開く">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#e07a5f" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+        </button>
+        <p class="splash-sub" id="splash-sub">クリックしてフォームを開始します</p>
+      </div>
+
     </div>
 
     <!-- Form area -->
@@ -426,6 +576,17 @@
       gsap.from(".pen-btn", { scale: 0.4 });
       gsap.to("#splash-sub", { opacity: 1, duration: 0.5, delay: 0.8 });
       gsap.to(".pen-btn", { rotation: 8, repeat: -1, yoyo: true, duration: 1.4, ease: "sine.inOut", delay: 1.4 });
+
+      // FAQ アコーディオン
+      document.querySelectorAll(".faq-q").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const item = btn.closest(".faq-item");
+          const isOpen = item.classList.contains("open");
+          // 他を閉じる
+          document.querySelectorAll(".faq-item.open").forEach(el => el.classList.remove("open"));
+          if (!isOpen) item.classList.add("open");
+        });
+      });
     });
 
     // ---- BG palette ----
