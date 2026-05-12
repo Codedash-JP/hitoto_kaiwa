@@ -1,3 +1,632 @@
 <!doctype html>
 <html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ご相談フォーム</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Outfit:wght@400;700;900&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fef3e8;
+      overflow: hidden;
+    }
+
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.45;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .blob-1 {
+      width: 500px;
+      height: 500px;
+      top: -100px;
+      left: -100px;
+      background: #f9c4a0;
+    }
+
+    .blob-2 {
+      width: 400px;
+      height: 400px;
+      bottom: -80px;
+      right: -80px;
+      background: #b5d5c5;
+    }
+
+    .scene {
+      position: relative;
+      z-index: 1;
+      width: min(520px, calc(100vw - 32px));
+      padding: 20px;
+    }
+
+    /* ---- Splash ---- */
+    #splash {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      text-align: center;
+    }
+
+    .splash-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 900;
+      color: #5c3d2e;
+    }
+
+    .pen-btn {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #e07a5f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(224, 122, 95, 0.25);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .pen-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 12px 32px rgba(224, 122, 95, 0.35);
+    }
+
+    .pen-btn svg {
+      width: 44px;
+      height: 44px;
+    }
+
+    .splash-sub {
+      font-size: 0.95rem;
+      color: #8c6552;
+    }
+
+    /* ---- Form area ---- */
+    #form-area {
+      display: none;
+      flex-direction: column;
+    }
+
+    .progress-bar-wrap {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 2px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #e07a5f, #f2a27c);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    /* Answer chips */
+    .answers-stream {
+      min-height: 36px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: flex-start;
+    }
+
+    .answer-chip {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.82rem;
+      color: #5c3d2e;
+      backdrop-filter: blur(6px);
+    }
+
+    /* Question card */
+    .q-card {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(14px);
+      border-radius: 20px;
+      padding: 28px 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    }
+
+    .q-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: #5c3d2e;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .step-badge {
+      font-size: 0.7rem;
+      background: #e07a5f;
+      color: #fff;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-family: 'Outfit', sans-serif;
+      white-space: nowrap;
+    }
+
+    .q-hint {
+      font-size: 0.82rem;
+      color: #8c6552;
+      margin: -10px 0 14px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      width: 100%;
+      border: 2px solid rgba(224, 122, 95, 0.25);
+      border-radius: 12px;
+      padding: 13px 16px;
+      font: inherit;
+      font-size: 1rem;
+      color: #3d2314;
+      background: rgba(255, 255, 255, 0.85);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #e07a5f;
+      box-shadow: 0 0 0 4px rgba(224, 122, 95, 0.15);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    @media (max-width: 400px) {
+      .check-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 2px solid rgba(224, 122, 95, 0.2);
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.5);
+      transition: border-color 0.2s, background 0.2s;
+      font-size: 0.88rem;
+      color: #5c3d2e;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .check-item input {
+      accent-color: #e07a5f;
+      width: 16px;
+      height: 16px;
+      flex: 0 0 auto;
+      cursor: pointer;
+    }
+
+    .check-item:has(input:checked) {
+      border-color: #e07a5f;
+      background: rgba(224, 122, 95, 0.1);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-next {
+      flex: 1;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #e07a5f, #f2a27c);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 16px rgba(224, 122, 95, 0.3);
+    }
+
+    .btn-next:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(224, 122, 95, 0.4);
+    }
+
+    .btn-next:active {
+      transform: translateY(0);
+    }
+
+    .btn-skip {
+      padding: 13px 18px;
+      border: 2px solid rgba(224, 122, 95, 0.3);
+      border-radius: 12px;
+      background: transparent;
+      color: #8c6552;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-skip:hover {
+      border-color: #e07a5f;
+      color: #e07a5f;
+    }
+
+    /* ---- Done ---- */
+    #done-area {
+      display: none;
+      text-align: center;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .done-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #b5d5c5, #81b9a3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+    }
+
+    .done-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #3d5a4a;
+    }
+
+    .done-sub {
+      font-size: 0.9rem;
+      color: #5a7a6a;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="blob blob-1" id="blob1"></div>
+  <div class="blob blob-2" id="blob2"></div>
+
+  <div class="scene">
+
+    <!-- Splash -->
+    <div id="splash">
+      <p class="splash-title" id="splash-title">Go on, click me!</p>
+      <button class="pen-btn" id="pen-btn" aria-label="フォームを開く">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#e07a5f" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      </button>
+      <p class="splash-sub" id="splash-sub">クリックしてフォームを開始します</p>
+    </div>
+
+    <!-- Form area -->
+    <div id="form-area">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="answers-stream" id="answers-stream"></div>
+      <!-- イベントはここ一か所に委譲する安定した親要素 -->
+      <div id="q-card-wrap">
+        <div class="q-card" id="q-card"></div>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div id="done-area">
+      <div class="done-icon">✓</div>
+      <p class="done-title">ありがとうございます！</p>
+      <p class="done-sub">内容を確認のうえ、ご連絡いたします。</p>
+    </div>
+
+  </div>
+
+  <script>
+    // ---- Config ----
+    const FORM_CONFIG = { postUrl: "" };
+
+    // ---- Steps ----
+    const STEPS = [
+      { key: "name",     label: "お名前を教えてください（ニックネーム可）",         type: "text",     placeholder: "山田 太郎",             required: true },
+      { key: "affil",   label: "所属・会社名を教えてください",                     type: "text",     placeholder: "〇〇株式会社",            required: false, skip: true },
+      { key: "email",   label: "メールアドレスを教えてください",                   type: "email",    placeholder: "mail@example.com",      required: true },
+      { key: "concerns",label: "悩んでいることは？（複数選択可）",               type: "check",
+        options: ["新卒採用","中途採用","AI活用","リスキリング","社員のモチベーション","事業モデル","市場規模の限界","組織づくり","営業・マーケティング","その他"],
+        required: false, skip: true },
+      { key: "message", label: "もう少し詳しく教えてください（どんなことも結構です）", type: "textarea", placeholder: "差し支えない範囲でどうぞ",  required: false, skip: true },
+      { key: "coupon",  label: "クーポンコードをお持ちの場合は入力してください",   type: "text",     placeholder: "例：PROMO2025",           required: false, skip: true },
+    ];
+
+    // ---- BG palettes ----
+    const PALETTES = [
+      { body: "#fef3e8", b1: "#f9c4a0", b2: "#b5d5c5" },
+      { body: "#edf5f0", b1: "#a8d5ba", b2: "#f9c4a0" },
+      { body: "#f0edf8", b1: "#c4b5f0", b2: "#f9c4a0" },
+      { body: "#fdf0f5", b1: "#f0b5ce", b2: "#b5d5e0" },
+      { body: "#f0f5fd", b1: "#b5c8f0", b2: "#f9c4a0" },
+      { body: "#eef8f0", b1: "#a8d5ba", b2: "#c4b5f0" },
+    ];
+
+    // ---- State ----
+    let currentStep = 0;
+    let answers = {};
+    let isAnimating = false;   // アニメ中フラグ（二重発火防止）
+
+    // ---- DOM ----
+    const splash = document.getElementById("splash");
+    const formArea = document.getElementById("form-area");
+    const doneArea = document.getElementById("done-area");
+    const qCard = document.getElementById("q-card");
+    const qCardWrap = document.getElementById("q-card-wrap");
+    const stream = document.getElementById("answers-stream");
+    const progressBar = document.getElementById("progress-bar");
+    const blob1 = document.getElementById("blob1");
+    const blob2 = document.getElementById("blob2");
+
+    // ---- Splash init ----
+    window.addEventListener("DOMContentLoaded", () => {
+      gsap.set(["#splash-title", ".pen-btn", "#splash-sub"], { opacity: 0 });
+      gsap.to("#splash-title", { opacity: 1, y: 0, duration: 0.7, ease: "power2.out", delay: 0.2 });
+      gsap.from("#splash-title", { y: -20 });
+      gsap.to(".pen-btn", { opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.4)", delay: 0.45 });
+      gsap.from(".pen-btn", { scale: 0.4 });
+      gsap.to("#splash-sub", { opacity: 1, duration: 0.5, delay: 0.8 });
+      gsap.to(".pen-btn", { rotation: 8, repeat: -1, yoyo: true, duration: 1.4, ease: "sine.inOut", delay: 1.4 });
+    });
+
+    // ---- BG palette ----
+    function applyPalette(idx) {
+      const p = PALETTES[idx % PALETTES.length];
+      gsap.to(document.body, { backgroundColor: p.body, duration: 0.9, ease: "power1.inOut" });
+      gsap.to(blob1, { backgroundColor: p.b1, duration: 0.9 });
+      gsap.to(blob2, { backgroundColor: p.b2, duration: 0.9 });
+    }
+
+    // ---- Pen click ----
+    document.getElementById("pen-btn").addEventListener("click", () => {
+      gsap.to(splash, {
+        opacity: 0, scale: 0.92, duration: 0.4, ease: "power2.in", onComplete: () => {
+          splash.style.display = "none";
+          formArea.style.display = "flex";
+          showStep(0);
+        }
+      });
+    });
+
+    // ---- Build card HTML ----
+    function buildCard(step, idx, savedAnswers) {
+      const isLast  = idx === STEPS.length - 1;
+      const badge   = `<span class="step-badge">${idx + 1} / ${STEPS.length}</span>`;
+      let inputHTML = "";
+      const saved   = savedAnswers[step.key] || "";
+
+      if (step.type === "text" || step.type === "email") {
+        const escaped = saved.replace(/"/g, "&quot;");
+        inputHTML = `<input id="q-input" type="${step.type}" placeholder="${step.placeholder || ""}" autocomplete="off" value="${escaped}">`;
+      } else if (step.type === "textarea") {
+        const escaped = saved.replace(/</g, "&lt;");
+        inputHTML = `<textarea id="q-input" placeholder="${step.placeholder || ""}">${escaped}</textarea>`;
+      } else if (step.type === "check") {
+        const savedArr = saved ? saved.split("、") : [];
+        const items = step.options.map(o => {
+          const checked = savedArr.includes(o) ? "checked" : "";
+          return `<label class="check-item"><input type="checkbox" value="${o}" ${checked}> ${o}</label>`;
+        }).join("");
+        inputHTML = `<div class="check-grid" id="q-checks">${items}</div>`;
+      }
+
+      const nextLabel = isLast ? "送信" : "次へ →";
+      const skipBtn   = step.skip && !isLast
+        ? `<button class="btn-skip" data-action="skip">スキップ</button>`
+        : "";
+      const backBtn   = idx > 0
+        ? `<button class="btn-skip" data-action="back">← 戻る</button>`
+        : "";
+
+      return `
+    <div class="q-label">${badge} ${step.label}</div>
+    ${step.hint ? `<p class="q-hint">${step.hint}</p>` : ""}
+    ${inputHTML}
+    <div class="btn-row">
+      ${backBtn}
+      <button class="btn-next" data-action="next">${nextLabel}</button>
+      ${skipBtn}
+    </div>
+  `;
+    }
+
+    // ---- Show step ----
+    // dir: 1=前進(右から入る), -1=後退(左から入る)
+    function showStep(idx, dir) {
+      dir = dir === undefined ? 1 : dir;
+      applyPalette(idx + 1);
+      progressBar.style.width = `${(idx / STEPS.length) * 100}%`;
+
+      qCard.innerHTML = buildCard(STEPS[idx], idx, answers);
+
+      gsap.set(qCard, { opacity: 0, x: dir * 60 });
+      gsap.to(qCard, {
+        opacity: 1, x: 0, duration: 0.45, ease: "power2.out", onComplete: () => {
+          isAnimating = false;
+        }
+      });
+
+      // チップ表示を現在ステップまで再描画
+      rebuildChips();
+
+      const inp = document.getElementById("q-input");
+      if (inp) setTimeout(() => inp.focus(), 80);
+    }
+
+    // ---- イベント委譲：qCardWrap 上で一度だけ登録 ----
+    qCardWrap.addEventListener("click", (e) => {
+      const action = e.target.dataset.action;
+      if (!action) return;
+      if (isAnimating) return;
+
+      if (action === "next") advance(false);
+      if (action === "skip") advance(true);
+      if (action === "back") goBack();
+    });
+
+    // Enter キーで次へ（textarea 以外）
+    qCardWrap.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      if (isAnimating) return;
+      const step = STEPS[currentStep];
+      if (step.type === "textarea") return;
+      advance(false);
+    });
+
+    // ---- Advance ----
+    function advance(skip) {
+      const step = STEPS[currentStep];
+      let value = "";
+
+      if (!skip) {
+        if (step.type === "check") {
+          value = Array.from(document.querySelectorAll("#q-checks input:checked"))
+            .map(i => i.value).join("、");
+        } else {
+          const inp = document.getElementById("q-input");
+          value = inp ? inp.value.trim() : "";
+        }
+
+        if (step.required && !value) {
+          // 入力欄シェイク
+          const target = document.getElementById("q-input") || document.getElementById("q-checks");
+          gsap.fromTo(target, { x: -7 }, {
+            x: 7, repeat: 5, yoyo: true, duration: 0.07, ease: "none",
+            onComplete: () => gsap.set(target, { x: 0 })
+          });
+          return;
+        }
+      }
+
+      isAnimating = true;
+      answers[step.key] = value;
+
+      // カードを左へ退場
+      gsap.to(qCard, {
+        opacity: 0, x: -90, duration: 0.38, ease: "power2.in", onComplete: () => {
+          currentStep++;
+          if (currentStep < STEPS.length) {
+            showStep(currentStep, 1);
+          } else {
+            showDone();
+          }
+        }
+      });
+    }
+
+    // ---- goBack ----
+    function goBack() {
+      if (currentStep === 0 || isAnimating) return;
+      isAnimating = true;
+      // 現在ステップの保存値をクリア
+      delete answers[STEPS[currentStep].key];
+
+      gsap.to(qCard, {
+        opacity: 0, x: 90, duration: 0.35, ease: "power2.in", onComplete: () => {
+          currentStep--;
+          showStep(currentStep, -1);
+        }
+      });
+    }
+
+    // ---- Chips（回答済みステップ分を再描画） ----
+    function rebuildChips() {
+      stream.innerHTML = "";
+      STEPS.slice(0, currentStep).forEach(s => {
+        const v = answers[s.key];
+        if (v) {
+          const chip = document.createElement("span");
+          chip.className = "answer-chip";
+          // 名前だけ「様」を付ける
+          const display = s.key === "name" ? v + " 様" : v;
+          chip.textContent = display.length > 22 ? display.slice(0, 22) + "…" : display;
+          stream.appendChild(chip);
+        }
+      });
+    }
+
+    // ---- Done ----
+    function showDone() {
+      formArea.style.display = "none";
+      doneArea.style.display = "flex";
+      applyPalette(5);
+      progressBar.style.width = "100%";
+
+      gsap.set([".done-icon", ".done-title", ".done-sub"], { opacity: 0 });
+      gsap.from(".done-icon", { scale: 0.3 });
+      gsap.to(".done-icon", { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.6)", delay: 0.1 });
+      gsap.to(".done-title", { opacity: 1, y: 0, duration: 0.5, delay: 0.4 });
+      gsap.from(".done-title", { y: 20 });
+      gsap.to(".done-sub", { opacity: 1, duration: 0.5, delay: 0.7 });
+
+      if (FORM_CONFIG.postUrl) {
+        fetch(FORM_CONFIG.postUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...answers, submittedAt: new Date().toISOString() })
+        }).catch(() => { });
+      }
+    }
+  </script>
+</body>
+
 </html>
